@@ -7,7 +7,8 @@
 <title>Floriq</title>
 <style>
   html, body { margin: 0; padding: 0; background: transparent; }
-  body { display: flex; justify-content: center; align-items: center; min-height: 70px; }
+  html, body { height: 100%; }
+  body { display: flex; justify-content: center; align-items: center; }
 </style>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=floriqStart&render=explicit" async defer></script>
 </head>
@@ -24,10 +25,14 @@ function floriqStart() {
   started = true;
   var key = new URLSearchParams(location.search).get('sitekey');
   if (!key) { send({ type: 'error', code: 'no-sitekey' }); return; }
+  send({ type: 'loaded', code: window.innerWidth + 'x' + window.innerHeight });
   turnstile.render('#check', {
     sitekey: key,
     theme: 'dark',
-    appearance: 'interaction-only',
+    size: 'normal',
+    // Always drawn: the app keeps its window hidden until Cloudflare asks for
+    // a tap, so nothing shows unless it is needed (and then the box is there).
+    appearance: 'always',
     callback: function (token) { send({ type: 'token', token: token }); },
     'before-interactive-callback': function () { send({ type: 'interactive' }); },
     'after-interactive-callback': function () { send({ type: 'solved' }); },
