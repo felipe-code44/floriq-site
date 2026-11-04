@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Floriq</title>
+<style>
+  html, body { margin: 0; padding: 0; background: transparent; }
+  body { display: flex; justify-content: center; align-items: center; min-height: 70px; }
+</style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=floriqStart&render=explicit" async defer></script>
+</head>
+<body>
+<div id="check"></div>
+<script>
+// The bot check for the Floriq app. The app opens this page in an invisible
+// WebView and gets back a one-time token. Opened in a browser it does nothing.
+function send(msg) {
+  try { if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(msg)); } catch (e) {}
+}
+var started = false;
+function floriqStart() {
+  started = true;
+  var key = new URLSearchParams(location.search).get('sitekey');
+  if (!key) { send({ type: 'error', code: 'no-sitekey' }); return; }
+  turnstile.render('#check', {
+    sitekey: key,
+    theme: 'dark',
+    appearance: 'interaction-only',
+    callback: function (token) { send({ type: 'token', token: token }); },
+    'before-interactive-callback': function () { send({ type: 'interactive' }); },
+    'after-interactive-callback': function () { send({ type: 'solved' }); },
+    'error-callback': function (code) { send({ type: 'error', code: String(code) }); },
+    'expired-callback': function () { send({ type: 'expired' }); },
+    'unsupported-callback': function () { send({ type: 'error', code: 'unsupported' }); }
+  });
+}
+setTimeout(function () { if (!started) send({ type: 'error', code: 'load' }); }, 15000);
+</script>
+</body>
+</html>
